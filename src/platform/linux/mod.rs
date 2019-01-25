@@ -2,12 +2,15 @@ use winit::{EventsLoop, Window, WindowBuilder};
 
 use crate::CreationError;
 use wayland::WaylandBackend;
+use x11::X11Backend;
 
 mod wayland;
+mod x11;
 
 pub struct BasinWindow {
     window: Window,
     wayland: Option<WaylandBackend>,
+    x11: Option<X11Backend>,
 }
 
 impl BasinWindow {
@@ -17,8 +20,16 @@ impl BasinWindow {
     ) -> Result<Self, CreationError> {
         let window = window_builder.build(events_loop)?;
 
+        let wayland = WaylandBackend::new(&window);
+        let x11 = if wayland.is_none() {
+            X11Backend::new(&window)
+        } else {
+            None
+        };
+
         Ok(BasinWindow {
-            wayland: WaylandBackend::new(&window),
+            wayland,
+            x11,
             window,
         })
     }
@@ -39,6 +50,11 @@ impl BasinWindow {
                 self.window.get_inner_size().unwrap().to_physical(1.).into();
             wayland.draw_argb8888((dimensions.0 as usize, dimensions.1 as usize), buffer);
         }
+        if let Some(x11) = &mut self.x11 {
+            let dimensions: (u32, u32) =
+                self.window.get_inner_size().unwrap().to_physical(1.).into();
+            x11.draw_argb8888((dimensions.0 as usize, dimensions.1 as usize), buffer);
+        }
     }
 
     pub fn draw_argb8888_bytes(&mut self, buffer: &[u8]) {
@@ -47,6 +63,11 @@ impl BasinWindow {
                 self.window.get_inner_size().unwrap().to_physical(1.).into();
             wayland.draw_argb8888_bytes((dimensions.0 as usize, dimensions.1 as usize), buffer);
         }
+        if let Some(x11) = &mut self.x11 {
+            let dimensions: (u32, u32) =
+                self.window.get_inner_size().unwrap().to_physical(1.).into();
+            x11.draw_argb8888_bytes((dimensions.0 as usize, dimensions.1 as usize), buffer);
+        }
     }
 
     pub fn draw_argb32(&mut self, buffer: &[u32]) {
@@ -54,6 +75,11 @@ impl BasinWindow {
             let dimensions: (u32, u32) =
                 self.window.get_inner_size().unwrap().to_physical(1.).into();
             wayland.draw_argb32((dimensions.0 as usize, dimensions.1 as usize), buffer);
+        }
+        if let Some(x11) = &mut self.x11 {
+            let dimensions: (u32, u32) =
+                self.window.get_inner_size().unwrap().to_physical(1.).into();
+            x11.draw_argb32((dimensions.0 as usize, dimensions.1 as usize), buffer);
         }
     }
 }

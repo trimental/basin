@@ -22,16 +22,16 @@ fn main() {
                 for x in 0..dimensions.0 {
                     let color = if ((x as f32 / 20.) as usize + (y as f32 / 20.) as usize) % 2 == 0
                     {
-                        [255, 30, 30, 30]
+                        0xFF1E1E1E
                     } else {
-                        [255, 60, 60, 60]
+                        0xFF3C3C3C
                     };
 
                     pixels.push(color);
                 }
             }
 
-            basin.draw_argb8888(&pixels);
+            basin.draw_argb32(&pixels);
             winit::ControlFlow::Continue
         }
         _ => winit::ControlFlow::Continue,
